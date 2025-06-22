@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import gspread
+import os
+import json
 from oauth2client.service_account import ServiceAccountCredentials
 
 app = Flask(__name__)
@@ -9,8 +11,13 @@ CORS(app)
 # === Google Sheet Setup ===
 scope = ["https://spreadsheets.google.com/feeds",
          "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name(
-    "ieee-certificate-database-e23ff7418d94.json", scope)
+json_creds = os.environ.get("GOOGLE_CREDENTIALS")
+
+if not json_creds:
+    raise Exception("Missing GOOGLE_CREDENTIALS environment variable!")
+
+creds_dict = json.loads(json_creds)
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
 SHEET_ID = "1-R-D15DgJJMW9RZuQ0x9F6HDjNRJJVFlohFh9J86Fmg"
