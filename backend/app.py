@@ -11,12 +11,14 @@ CORS(app)
 # === Google Sheet Setup ===
 scope = ["https://spreadsheets.google.com/feeds",
          "https://www.googleapis.com/auth/drive"]
-json_creds = os.environ.get("GOOGLE_CREDENTIALS")
+json_path = os.environ.get("GOOGLE_CREDENTIALS")
 
-if not json_creds:
-    raise Exception("Missing GOOGLE_CREDENTIALS environment variable!")
+if not json_path or not os.path.exists(json_path):
+    raise Exception("Missing or invalid GOOGLE_CREDENTIALS secret file path.")
 
-creds_dict = json.loads(json_creds)
+with open(json_path, "r") as f:
+    creds_dict = json.load(f)
+
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
