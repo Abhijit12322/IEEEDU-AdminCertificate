@@ -211,9 +211,9 @@ export default function App() {
     setIsLoading(true);
     try {
       if (isEditing) {
-        await axios.put(`http://ieeedu-admincertificate.onrender.com/participants/${form.serialNumber}`, form);
+        await axios.put(`https://ieeedu-admincertificate.onrender.com/participants/${form.serialNumber}`, form);
       } else {
-        await axios.post("http://ieeedu-admincertificate.onrender.com/participants", form);
+        await axios.post("https://ieeedu-admincertificate.onrender.com/participants", form);
       }
       resetForm();
       fetchData();
