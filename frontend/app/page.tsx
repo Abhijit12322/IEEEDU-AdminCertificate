@@ -211,9 +211,9 @@ export default function App() {
     setIsLoading(true);
     try {
       if (isEditing) {
-        await axios.put(`http://127.0.0.1:5000/participants/${form.serialNumber}`, form);
+        await axios.put(`http://ieeedu-admincertificate.onrender.com/participants/${form.serialNumber}`, form);
       } else {
-        await axios.post("http://127.0.0.1:5000/participants", form);
+        await axios.post("http://ieeedu-admincertificate.onrender.com/participants", form);
       }
       resetForm();
       fetchData();
@@ -272,7 +272,7 @@ export default function App() {
     } else if (passwordModal.type === 'delete' && passwordModal.participant) {
       setIsLoading(true);
       try {
-        await axios.delete(`http://127.0.0.1:5000/participants/${passwordModal.participant.serialNumber}`);
+        await axios.delete(`http://ieeedu-admincertificate.onrender.com/participants/${passwordModal.participant.serialNumber}`);
         fetchData();
       } catch (error) {
         console.error("Failed to delete participant", error);
