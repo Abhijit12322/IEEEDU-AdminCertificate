@@ -272,7 +272,7 @@ export default function App() {
     } else if (passwordModal.type === 'delete' && passwordModal.participant) {
       setIsLoading(true);
       try {
-        await axios.delete(`http://ieeedu-admincertificate.onrender.com/participants/${passwordModal.participant.serialNumber}`);
+        await axios.delete(`https://ieeedu-admincertificate.onrender.com/participants/${passwordModal.participant.serialNumber}`);
         fetchData();
       } catch (error) {
         console.error("Failed to delete participant", error);
