@@ -12,11 +12,11 @@ CORS(app)
 scope = ["https://spreadsheets.google.com/feeds",
          "https://www.googleapis.com/auth/drive"]
 
-json_path = "/etc/secrets/ieee-certificate-database-f01242d4c196.json"
+json_path = os.getenv("GOOGLE_CREDENTIALS_PATH")
 
-if not os.path.exists(json_path):
-    raise Exception("Missing or invalid service account secret file path.")
-
+if not json_path or not os.path.exists(json_path):
+    raise Exception(
+        "Missing or invalid GOOGLE_CREDENTIALS_PATH environment variable or file path.")
 
 with open(json_path, "r") as f:
     creds_dict = json.load(f)
