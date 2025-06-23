@@ -45,7 +45,7 @@ ieee-certificate-admin/
 
 ## 🔧 Setup Instructions
 
-### 🔐 Step 1: Google Cloud & Sheets API Setup
+### Step 1: Google Cloud & Sheets API Setup
 
 1. **Create a Google Cloud Project**
 
@@ -74,7 +74,7 @@ ieee-certificate-admin/
 
 
 
-## 🐍 Step 2: Backend Setup (Flask)
+## Step 2: Backend Setup (Flask)
 
 📦 Install Python Requirements
 
@@ -90,7 +90,7 @@ Flask will run on: http://localhost:5000
 ```
 
 
-## ⚛️ Step 3: Frontend Setup (Next.js)
+## Step 3: Frontend Setup (Next.js)
 📦 Install Dependencies
 ```bash
 
@@ -106,7 +106,7 @@ Your frontend will run on: http://localhost:3000
 ---
 
 
-## 🚀 Deployment
+## Deployment
 ### 🔵 Deploy Backend (Flask) on Render
 
 ```bash
