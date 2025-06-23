@@ -131,10 +131,6 @@ Push your frontend/ folder to GitHub
 
 Import your project in Vercel
 
-Add the following environment variable:
-
-
-NEXT_PUBLIC_API_URL=https://<your-backend-url>.onrender.com
 Deploy!
 ```
 ---
