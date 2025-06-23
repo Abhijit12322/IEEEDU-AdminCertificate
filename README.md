@@ -5,9 +5,9 @@ This web application allows admins to add, view, update, and manage participant 
 
 Built with:
 
-- 🧑‍💻 **Frontend**: [Next.js](https://ieeedu-admin-certificate.vercel.app/)
-- 🐍 **Backend**: [Flask](https://ieeedu-admincertificate.onrender.com)
-- 📄 **Database**: Google Sheets (Sheet1)
+- **Frontend**: [Next.js](https://ieeedu-admin-certificate.vercel.app/)
+- **Backend**: [Flask](https://ieeedu-admincertificate.onrender.com)
+- **Database**: Google Sheets (Sheet1)
 
 ---
 
@@ -43,7 +43,7 @@ ieee-certificate-admin/
 ---
 
 
-## 🔧 Setup Instructions
+## Setup Instructions
 
 ### Step 1: Google Cloud & Sheets API Setup
 
@@ -76,14 +76,14 @@ ieee-certificate-admin/
 
 ## Step 2: Backend Setup (Flask)
 
-📦 Install Python Requirements
+ Install Python Requirements
 
 ```bash
 cd backend
 pip install -r requirements.txt
 
 ```
-▶️ Run Flask Backend
+Run Flask Backend
 ```bash
 python app.py
 Flask will run on: http://localhost:5000
@@ -91,13 +91,13 @@ Flask will run on: http://localhost:5000
 
 
 ## Step 3: Frontend Setup (Next.js)
-📦 Install Dependencies
+Install Dependencies
 ```bash
 
 cd frontend
 npm install
 ```
-▶️ Run the Development Server
+Run the Development Server
 ```bash
 
 npm run dev
@@ -136,7 +136,7 @@ Deploy!
 ---
 
 
-## 🛡️ Optional Enhancements
+## Optional Enhancements
 
 🔄 Add PUT/DELETE routes in Flask for edit/delete functionality
 
@@ -149,5 +149,5 @@ Deploy!
 📧 Email participant on new certificate issued
 
 
-## 🙋 Support & Contribution
+## Support & Contribution
 If you want help expanding the features (e.g., adding login, PDF generation, or real-time email sending), feel free to contribute or reach out.
