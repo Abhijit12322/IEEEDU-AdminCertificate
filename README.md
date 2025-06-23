@@ -76,14 +76,14 @@ ieee-certificate-admin/
 
 ## 🐍 Step 2: Backend Setup (Flask)
 
-### 📦 Install Python Requirements
+📦 Install Python Requirements
 
 ```bash
 cd backend
 pip install -r requirements.txt
 
 ```
-### ▶️ Run Flask Backend
+▶️ Run Flask Backend
 ```bash
 python app.py
 Flask will run on: http://localhost:5000
@@ -91,28 +91,17 @@ Flask will run on: http://localhost:5000
 
 
 ## ⚛️ Step 3: Frontend Setup (Next.js)
-### 📦 Install Dependencies
+📦 Install Dependencies
 ```bash
 
 cd frontend
 npm install
 ```
-### ▶️ Run the Development Server
+▶️ Run the Development Server
 ```bash
 
 npm run dev
 Your frontend will run on: http://localhost:3000
-```
-### 🔗 Backend API URL
-Make sure your Axios/fetch requests point to:
-
-```bash
-http://localhost:5000/participants
-Or use a .env.local in the frontend:
-
-
-NEXT_PUBLIC_API_URL=http://localhost:5000
-Update axios.get() and axios.post() to use this env variable.
 ```
 ---
 
