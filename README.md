@@ -86,14 +86,6 @@ pip install -r requirements.txt
 python app.py
 Flask will run on: http://localhost:5000
 ```
-### 🧠 Flask API Endpoints
-```bash
-GET /participants
-Returns a list of all participant records from the Google Sheet
-
-POST /participants
-Accepts a JSON body like:
-```
 
 ## ⚛️ Step 3: Frontend Setup (Next.js)
 ### 📦 Install Dependencies
@@ -123,6 +115,7 @@ Update axios.get() and axios.post() to use this env variable.
 
 ## 🚀 Deployment
 ### 🔵 Deploy Backend (Flask) on Render
+
 ```bash
 Push your backend/ folder to GitHub
 
@@ -139,6 +132,7 @@ Add credentials.json as a Secret File
 Add build environment: pip install -r requirements.txt
 ```
 ### ⚪ Deploy Frontend (Next.js) on Vercel
+
 ```bash
 Push your frontend/ folder to GitHub
 
