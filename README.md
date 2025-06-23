@@ -98,13 +98,13 @@ Flask will run on: http://localhost:5000
 cd frontend
 npm install
 ```
-▶️ Run the Development Server
+### ▶️ Run the Development Server
 ```bash
 
 npm run dev
 Your frontend will run on: http://localhost:3000
 ```
-🔗 Backend API URL
+### 🔗 Backend API URL
 Make sure your Axios/fetch requests point to:
 
 ```bash
