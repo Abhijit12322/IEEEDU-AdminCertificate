@@ -11,6 +11,7 @@ Built with:
 
 ---
 
+
 ## 📌 Features
 
 - ✅ View all participants and their certificate details
@@ -21,6 +22,7 @@ Built with:
 - ☁️ Deployable on Vercel (frontend) and Render (backend)
 
 ---
+
 
 ## 📁 Folder Structure
 
@@ -39,6 +41,7 @@ ieee-certificate-admin/
 ```
 
 ---
+
 
 ## 🔧 Setup Instructions
 
@@ -87,6 +90,7 @@ python app.py
 Flask will run on: http://localhost:5000
 ```
 
+
 ## ⚛️ Step 3: Frontend Setup (Next.js)
 ### 📦 Install Dependencies
 ```bash
@@ -104,7 +108,6 @@ Your frontend will run on: http://localhost:3000
 Make sure your Axios/fetch requests point to:
 
 ```bash
-
 http://localhost:5000/participants
 Or use a .env.local in the frontend:
 
@@ -113,6 +116,7 @@ NEXT_PUBLIC_API_URL=http://localhost:5000
 Update axios.get() and axios.post() to use this env variable.
 ```
 ---
+
 
 ## 🚀 Deployment
 ### 🔵 Deploy Backend (Flask) on Render
@@ -147,6 +151,7 @@ Deploy!
 ```
 ---
 
+
 ## 🛡️ Optional Enhancements
 ```bash
 🔄 Add PUT/DELETE routes in Flask for edit/delete functionality
@@ -159,6 +164,7 @@ Deploy!
 
 📧 Email participant on new certificate issued
 ```
+
 
 ## 🙋 Support & Contribution
 If you want help expanding the features (e.g., adding login, PDF generation, or real-time email sending), feel free to contribute or reach out.
