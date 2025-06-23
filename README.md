@@ -112,6 +112,7 @@ Or use a .env.local in the frontend:
 NEXT_PUBLIC_API_URL=http://localhost:5000
 Update axios.get() and axios.post() to use this env variable.
 ```
+---
 
 ## 🚀 Deployment
 ### 🔵 Deploy Backend (Flask) on Render
@@ -144,6 +145,7 @@ Add the following environment variable:
 NEXT_PUBLIC_API_URL=https://<your-backend-url>.onrender.com
 Deploy!
 ```
+---
 
 ## 🛡️ Optional Enhancements
 ```bash
