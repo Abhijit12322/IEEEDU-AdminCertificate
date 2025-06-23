@@ -153,7 +153,7 @@ Deploy!
 
 
 ## 🛡️ Optional Enhancements
-```bash
+
 🔄 Add PUT/DELETE routes in Flask for edit/delete functionality
 
 🔐 Modal-based password input in frontend for admin-only actions
@@ -163,7 +163,6 @@ Deploy!
 📥 Export Sheet data as CSV
 
 📧 Email participant on new certificate issued
-```
 
 
 ## 🙋 Support & Contribution
