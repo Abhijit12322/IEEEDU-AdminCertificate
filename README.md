@@ -46,7 +46,7 @@ ieee-certificate-admin/
 ## 🔧 Setup Instructions
 
 ### 🔐 Step 1: Google Cloud & Sheets API Setup
-```bash
+
 1. **Create a Google Cloud Project**
 
    - Visit [Google Cloud Console](https://console.cloud.google.com/)
@@ -72,7 +72,6 @@ ieee-certificate-admin/
    - Share it with the service account email (`xxx@xxx.iam.gserviceaccount.com`)
    - Grant **Editor** access
 
-```
 
 
 ## 🐍 Step 2: Backend Setup (Flask)
