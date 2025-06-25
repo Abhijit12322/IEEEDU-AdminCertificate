@@ -19,7 +19,6 @@ import {
   CheckCircle,
   XCircle,
   RefreshCw,
-  Settings,
   Shield
 } from "lucide-react";
 
