@@ -366,7 +366,7 @@ export default function App() {
               </div>
               <div>
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                  IEEE Participant Admin
+                  IEEE Cerficate Admin Dashboard
                 </h1>
                 <p className="text-gray-600 mt-1">IEEE Dibrugarh University Students Branch</p>
               </div>
