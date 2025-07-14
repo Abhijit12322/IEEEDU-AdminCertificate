@@ -326,12 +326,29 @@ export default function App() {
     });
   };
 
+
   const handlePasswordConfirm = async (password: string) => {
+    if (!password.trim()) {
+      alert("Password required");
+      return;
+    }
+
     if (passwordModal.type === 'edit' && passwordModal.participant) {
-      // ✅ No password check here — backend does it!
-      setForm(passwordModal.participant);
-      setIsEditing(true);
-      setPasswordModal({ ...passwordModal, isOpen: false });
+      try {
+        const res = await axios.post("https://ieeedu-admincertificate.onrender.com/verify-password", {
+          password: password
+        });
+        if (res.status === 200) {
+          setForm(passwordModal.participant);
+          setIsEditing(true);
+        } else {
+          alert("Invalid admin password. Access denied.");
+        }
+      } catch (err) {
+        alert("Invalid admin password. Access denied.");
+      } finally {
+        setPasswordModal({ ...passwordModal, isOpen: false });
+      }
     } else if (passwordModal.type === 'delete' && passwordModal.participant) {
       setIsLoading(true);
       try {
@@ -339,7 +356,7 @@ export default function App() {
           `https://ieeedu-admincertificate.onrender.com/participants/${passwordModal.participant.serialNumber}`,
           {
             data: {
-              password: password, // ✅ Pass password to backend
+              password: password,
             },
           }
         );
@@ -349,10 +366,11 @@ export default function App() {
         alert("Deletion failed. Please check your connection and try again.");
       } finally {
         setIsLoading(false);
+        setPasswordModal({ ...passwordModal, isOpen: false });
       }
-      setPasswordModal({ ...passwordModal, isOpen: false });
     }
   };
+
 
 
   const handlePasswordModalClose = () => {

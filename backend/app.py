@@ -123,6 +123,15 @@ def check_password():
     })
 
 
+@app.route('/verify-password', methods=['POST'])
+def verify_password():
+    data = request.json
+    password = data.get('password')
+    if password == os.environ.get('ADMIN_PASSWORD'):
+        return jsonify({"status": "ok"}), 200
+    return jsonify({"status": "unauthorized"}), 401
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
