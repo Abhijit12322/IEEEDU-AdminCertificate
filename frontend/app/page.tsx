@@ -180,7 +180,6 @@ export default function App() {
     message: ''
   });
 
-  const ADMIN_PASSWORD = "admin123";
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -267,17 +266,21 @@ export default function App() {
   };
 
   const submitForm = async (password?: string) => {
-    if (isEditing && password !== ADMIN_PASSWORD) {
-      alert("Access denied. Invalid administrator password.");
-      return;
-    }
-
     setIsLoading(true);
     try {
       if (isEditing) {
-        await axios.put(`https://ieeedu-admincertificate.onrender.com/participants/${form.serialNumber}`, form);
+        await axios.put(
+          `https://ieeedu-admincertificate.onrender.com/participants/${form.serialNumber}`,
+          {
+            ...form,
+            password: password,  // ✅ Send the password in the request body
+          }
+        );
       } else {
-        await axios.post("https://ieeedu-admincertificate.onrender.com/participants", form);
+        await axios.post(
+          "https://ieeedu-admincertificate.onrender.com/participants",
+          form
+        );
       }
       resetForm();
       fetchData();
@@ -288,6 +291,7 @@ export default function App() {
       setIsLoading(false);
     }
   };
+
 
   const resetForm = () => {
     setForm({
@@ -323,20 +327,22 @@ export default function App() {
   };
 
   const handlePasswordConfirm = async (password: string) => {
-    if (password !== ADMIN_PASSWORD) {
-      alert("Access denied. Invalid administrator password.");
-      setPasswordModal({ ...passwordModal, isOpen: false });
-      return;
-    }
-
     if (passwordModal.type === 'edit' && passwordModal.participant) {
+      // ✅ No password check here — backend does it!
       setForm(passwordModal.participant);
       setIsEditing(true);
       setPasswordModal({ ...passwordModal, isOpen: false });
     } else if (passwordModal.type === 'delete' && passwordModal.participant) {
       setIsLoading(true);
       try {
-        await axios.delete(`https://ieeedu-admincertificate.onrender.com/participants/${passwordModal.participant.serialNumber}`);
+        await axios.delete(
+          `https://ieeedu-admincertificate.onrender.com/participants/${passwordModal.participant.serialNumber}`,
+          {
+            data: {
+              password: password, // ✅ Pass password to backend
+            },
+          }
+        );
         fetchData();
       } catch (error) {
         console.error("Failed to delete participant", error);
@@ -347,6 +353,7 @@ export default function App() {
       setPasswordModal({ ...passwordModal, isOpen: false });
     }
   };
+
 
   const handlePasswordModalClose = () => {
     setPasswordModal({ ...passwordModal, isOpen: false });

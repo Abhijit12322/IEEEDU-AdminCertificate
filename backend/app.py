@@ -4,6 +4,10 @@ import gspread
 import os
 import json
 from oauth2client.service_account import ServiceAccountCredentials
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 app = Flask(__name__)
 CORS(app)
@@ -13,6 +17,8 @@ scope = ["https://spreadsheets.google.com/feeds",
          "https://www.googleapis.com/auth/drive"]
 
 json_path = os.getenv("GOOGLE_CREDENTIALS_PATH")
+
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 if not json_path or not os.path.exists(json_path):
     raise Exception(
@@ -69,6 +75,12 @@ def add_participant():
 
 @app.route("/participants/<serial_number>", methods=["DELETE"])
 def delete_participant(serial_number):
+    req_data = request.json or {}
+    password = req_data.get("password")
+
+    if password != ADMIN_PASSWORD:
+        return jsonify({"error": "Unauthorized: Invalid admin password."}), 401
+
     records = sheet.get_all_records()
     for i, row in enumerate(records, start=2):  # skip header
         if row.get("Serial Number") == serial_number:
@@ -81,6 +93,12 @@ def delete_participant(serial_number):
 
 @app.route("/participants/<serial_number>", methods=["PUT"])
 def update_participant(serial_number):
+    req_data = request.json or {}
+    password = req_data.get("password")
+
+    if password != ADMIN_PASSWORD:
+        return jsonify({"error": "Unauthorized: Invalid admin password."}), 401
+
     new_data = request.json
     records = sheet.get_all_records()
     for i, row in enumerate(records, start=2):
@@ -96,6 +114,13 @@ def update_participant(serial_number):
             ]])
             return jsonify({"message": "Participant updated."}), 200
     return jsonify({"error": "Participant not found."}), 404
+
+
+@app.route("/check-password")
+def check_password():
+    return jsonify({
+        "ADMIN_PASSWORD": ADMIN_PASSWORD
+    })
 
 
 if __name__ == "__main__":
