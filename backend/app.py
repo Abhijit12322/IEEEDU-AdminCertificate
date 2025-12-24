@@ -98,42 +98,50 @@ def update_participant(serial_number):
     if password != ADMIN_PASSWORD:
         return jsonify({"error": "Unauthorized"}), 401
 
+    # Fetch all records
     records = get_all_records()
 
+    # Find the row index
     row_index = None
-    for i, row in enumerate(records, start=2):
-        if row.get("Serial Number") == serial_number:
+    for i, row in enumerate(records, start=2):  # Start at 2 for header
+        if row.get("Serial_Number") == serial_number:
             row_index = i
             break
 
-    if not row_index:
+    if row_index is None:
         return jsonify({"error": "Participant not found"}), 404
 
-    new_serial = req["serialNumber"]
+    new_serial = req.get("serialNumber", serial_number)
 
     # 🔒 SERIAL UNIQUENESS CHECK
     for row in records:
-        if (
-            row.get("Serial Number") == new_serial
-            and new_serial != serial_number
-        ):
-            return jsonify({
-                "error": "Serial number already exists"
-            }), 409
+        if row.get("Serial_Number") == new_serial and new_serial != serial_number:
+            return jsonify({"error": "Serial number already exists"}), 409
 
-    sheet.update(
-        f"A{row_index}:G{row_index}",
-        [[
-            new_serial,
-            req["name"],
-            req["programEvents"],
-            req["issueDate"],
-            req["position"],
-            req["programPhotoLink"],
-            req["certificateUrl"]
-        ]],
-        value_input_option="USER_ENTERED"
-    )
+    # Prepare updated values in order
+    cols = [
+        "Serial_Number",
+        "Name",
+        "Program",
+        "Issue_Date",
+        "Position",
+        "Program_Photo_Link",
+        "Certificate_URL"
+    ]
+
+    values = [
+        new_serial,
+        req.get("name", ""),
+        req.get("programEvents", ""),
+        req.get("issueDate", ""),
+        req.get("position", ""),
+        req.get("programPhotoLink", ""),
+        req.get("certificateUrl", "")
+    ]
+
+    # Update row in Google Sheet
+    sheet.update(f"A{row_index}:G{row_index}", [
+                 values], value_input_option="USER_ENTERED")
 
     return jsonify({"message": "Participant updated successfully"}), 200
 
