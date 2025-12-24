@@ -51,13 +51,13 @@ def get_participants():
     records = get_all_records()
     return jsonify([
         {
-            "serialNumber": r.get("Serial Number", ""),
+            "serialNumber": r.get("Serial_Number", ""),
             "name": r.get("Name", ""),
-            "programEvents": r.get("Program Events", ""),
-            "issueDate": r.get("Issue Date", ""),
+            "programEvents": r.get("Program", ""),
+            "issueDate": r.get("Issue_Date", ""),
             "position": r.get("Position", ""),
-            "programPhotoLink": r.get("Program Photo Link", ""),
-            "certificateUrl": r.get("Certificate URL", "")
+            "programPhotoLink": r.get("Program_Photo_Link", ""),
+            "certificateUrl": r.get("Certificate_URL", "")
         }
         for r in records
     ])
