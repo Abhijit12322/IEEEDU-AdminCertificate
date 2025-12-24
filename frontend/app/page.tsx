@@ -2,26 +2,7 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import {
-  Camera,
-  FileText,
-  Trash2,
-  Pencil,
-  Users,
-  Plus,
-  AlertCircle,
-  Lock,
-  X,
-  Search,
-  Filter,
-  Calendar,
-  MapPin,
-  Award,
-  CheckCircle,
-  XCircle,
-  RefreshCw,
-  Shield
-} from "lucide-react";
+
 
 interface Participant {
   serialNumber: string;
