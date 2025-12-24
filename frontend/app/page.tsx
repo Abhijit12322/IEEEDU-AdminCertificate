@@ -344,7 +344,7 @@ export default function App() {
         } else {
           alert("Invalid admin password. Access denied.");
         }
-      } catch (error) {
+      } catch {
         alert("Invalid admin password. Access denied.");
       } finally {
         setPasswordModal({ ...passwordModal, isOpen: false });
