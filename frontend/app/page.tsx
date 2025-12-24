@@ -43,7 +43,6 @@ interface PasswordModalProps {
 
 function PasswordModal({ isOpen, onClose, onConfirm, title, message, type }: PasswordModalProps) {
   const [password, setPassword] = useState("");
-  const [originalSerial, setOriginalSerial] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
