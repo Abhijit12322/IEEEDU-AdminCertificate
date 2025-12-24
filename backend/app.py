@@ -96,23 +96,42 @@ def update_participant(serial_number):
     req_data = request.json or {}
     password = req_data.get("password")
 
+    # 1. Admin authentication
     if password != ADMIN_PASSWORD:
         return jsonify({"error": "Unauthorized: Invalid admin password."}), 401
 
-    new_data = request.json
+    new_serial = req_data["serialNumber"].strip()
+
     records = sheet.get_all_records()
-    for i, row in enumerate(records, start=2):
+
+    # 2. Prevent serial duplication (except for the same record)
+    for row in records:
+        if (
+            row.get("Serial Number") == new_serial
+            and new_serial != serial_number
+        ):
+            return jsonify({
+                "error": "Serial number already exists. It must be unique."
+            }), 409
+
+    # 3. Find and update the correct row
+    for i, row in enumerate(records, start=2):  # start=2 skips header
         if row.get("Serial Number") == serial_number:
-            sheet.update(f"A{i}:G{i}", [[
-                new_data["serialNumber"],
-                new_data["name"],
-                new_data["programEvents"],
-                new_data["issueDate"],
-                new_data["position"],
-                new_data["programPhotoLink"],
-                new_data["certificateUrl"]
-            ]])
-            return jsonify({"message": "Participant updated."}), 200
+            sheet.update(
+                f"A{i}:G{i}",
+                [[
+                    new_serial,
+                    req_data["name"],
+                    req_data["programEvents"],
+                    req_data["issueDate"],
+                    req_data["position"],
+                    req_data["programPhotoLink"],
+                    req_data["certificateUrl"]
+                ]],
+                value_input_option="USER_ENTERED"
+            )
+            return jsonify({"message": "Participant updated successfully."}), 200
+
     return jsonify({"error": "Participant not found."}), 404
 
 
