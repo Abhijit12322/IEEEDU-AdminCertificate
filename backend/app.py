@@ -8,23 +8,22 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 app = Flask(__name__)
 CORS(app)
 
-# === Google Sheet Setup ===
-scope = ["https://spreadsheets.google.com/feeds",
-         "https://www.googleapis.com/auth/drive"]
-
-json_path = os.getenv("GOOGLE_CREDENTIALS_PATH")
+# ================== CONFIG ==================
+scope = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive"
+]
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+json_path = os.getenv("GOOGLE_CREDENTIALS_PATH")
 
 if not json_path or not os.path.exists(json_path):
-    raise Exception(
-        "Missing or invalid GOOGLE_CREDENTIALS_PATH environment variable or file path.")
+    raise Exception("Missing GOOGLE_CREDENTIALS_PATH")
 
-with open(json_path, "r") as f:
+with open(json_path) as f:
     creds_dict = json.load(f)
 
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
@@ -33,31 +32,48 @@ client = gspread.authorize(creds)
 SHEET_ID = "1-R-D15DgJJMW9RZuQ0x9F6HDjNRJJVFlohFh9J86Fmg"
 sheet = client.open_by_key(SHEET_ID).worksheet("Sheet1 web")
 
-# === Read All Participants ===
+# ================== HELPERS ==================
+
+
+def get_all_records():
+    return sheet.get_all_records()
+
+
+def serial_exists(serial):
+    records = get_all_records()
+    return any(r.get("Serial Number") == serial for r in records)
+
+# ================== GET ==================
 
 
 @app.route("/participants", methods=["GET"])
 def get_participants():
-    records = sheet.get_all_records()
-    cleaned = []
-    for rec in records:
-        cleaned.append({
-            "serialNumber": rec.get("Serial Number", ""),
-            "name": rec.get("Name", ""),
-            "programEvents": rec.get("Program\\ Events", ""),
-            "issueDate": rec.get("Issue Date", ""),
-            "position": rec.get("Position", ""),
-            "programPhotoLink": rec.get("Program Photo Link", ""),
-            "certificateUrl": rec.get("Certificate URL", ""),
-        })
-    return jsonify(cleaned)
+    records = get_all_records()
+    return jsonify([
+        {
+            "serialNumber": r.get("Serial Number", ""),
+            "name": r.get("Name", ""),
+            "programEvents": r.get("Program Events", ""),
+            "issueDate": r.get("Issue Date", ""),
+            "position": r.get("Position", ""),
+            "programPhotoLink": r.get("Program Photo Link", ""),
+            "certificateUrl": r.get("Certificate URL", "")
+        }
+        for r in records
+    ])
 
-# === Add a Participant ===
+# ================== ADD ==================
 
 
 @app.route("/participants", methods=["POST"])
 def add_participant():
-    data = request.json
+    data = request.json or {}
+
+    if serial_exists(data["serialNumber"]):
+        return jsonify({
+            "error": "Serial number already exists"
+        }), 409
+
     row = [
         data["serialNumber"],
         data["name"],
@@ -67,28 +83,11 @@ def add_participant():
         data["programPhotoLink"],
         data["certificateUrl"]
     ]
-    sheet.append_row(row)
-    return jsonify({"message": "Participant added successfully."}), 201
 
-# === Delete a Participant ===
+    sheet.append_row(row, value_input_option="USER_ENTERED")
+    return jsonify({"message": "Participant added successfully"}), 201
 
-
-@app.route("/participants/<serial_number>", methods=["DELETE"])
-def delete_participant(serial_number):
-    req_data = request.json or {}
-    password = req_data.get("password")
-
-    if password != ADMIN_PASSWORD:
-        return jsonify({"error": "Unauthorized: Invalid admin password."}), 401
-
-    records = sheet.get_all_records()
-    for i, row in enumerate(records, start=2):  # skip header
-        if row.get("Serial Number") == serial_number:
-            sheet.delete_rows(i)
-            return jsonify({"message": "Participant deleted."}), 200
-    return jsonify({"error": "Participant not found."}), 404
-
-# === Update a Participant ===
+# ================== UPDATE ==================
 
 
 @app.route("/participants/<serial_number>", methods=["PUT"])
@@ -99,10 +98,8 @@ def update_participant(serial_number):
     if password != ADMIN_PASSWORD:
         return jsonify({"error": "Unauthorized"}), 401
 
-    records = sheet.get_all_records()
-    headers = sheet.row_values(1)
+    records = get_all_records()
 
-    # Find row index
     row_index = None
     for i, row in enumerate(records, start=2):
         if row.get("Serial Number") == serial_number:
@@ -112,40 +109,66 @@ def update_participant(serial_number):
     if not row_index:
         return jsonify({"error": "Participant not found"}), 404
 
-    # Map header → value
-    update_data = {
-        "Serial Number": req["serialNumber"],
-        "Name": req["name"],
-        "Program Events": req["programEvents"],
-        "Issue Date": req["issueDate"],
-        "Position": req["position"],
-        "Program Photo Link": req["programPhotoLink"],
-        "Certificate URL": req["certificateUrl"],
-    }
+    new_serial = req["serialNumber"]
 
-    for col_name, value in update_data.items():
-        col_index = headers.index(col_name) + 1
-        sheet.update_cell(row_index, col_index, value)
+    # 🔒 SERIAL UNIQUENESS CHECK
+    for row in records:
+        if (
+            row.get("Serial Number") == new_serial
+            and new_serial != serial_number
+        ):
+            return jsonify({
+                "error": "Serial number already exists"
+            }), 409
+
+    sheet.update(
+        f"A{row_index}:G{row_index}",
+        [[
+            new_serial,
+            req["name"],
+            req["programEvents"],
+            req["issueDate"],
+            req["position"],
+            req["programPhotoLink"],
+            req["certificateUrl"]
+        ]],
+        value_input_option="USER_ENTERED"
+    )
 
     return jsonify({"message": "Participant updated successfully"}), 200
 
-
-@app.route("/check-password")
-def check_password():
-    return jsonify({
-        "ADMIN_PASSWORD": ADMIN_PASSWORD
-    })
+# ================== DELETE ==================
 
 
-@app.route('/verify-password', methods=['POST'])
+@app.route("/participants/<serial_number>", methods=["DELETE"])
+def delete_participant(serial_number):
+    req = request.json or {}
+    password = req.get("password")
+
+    if password != ADMIN_PASSWORD:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    records = get_all_records()
+
+    for i, row in enumerate(records, start=2):
+        if row.get("Serial Number") == serial_number:
+            sheet.delete_rows(i)
+            return jsonify({"message": "Participant deleted"}), 200
+
+    return jsonify({"error": "Participant not found"}), 404
+
+# ================== PASSWORD CHECK ==================
+
+
+@app.route("/verify-password", methods=["POST"])
 def verify_password():
-    data = request.json
-    password = data.get('password')
-    if password == os.environ.get('ADMIN_PASSWORD'):
+    data = request.json or {}
+    if data.get("password") == ADMIN_PASSWORD:
         return jsonify({"status": "ok"}), 200
     return jsonify({"status": "unauthorized"}), 401
 
 
+# ================== RUN ==================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
