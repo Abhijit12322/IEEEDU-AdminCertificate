@@ -269,11 +269,16 @@ export default function App() {
     setIsLoading(true);
     try {
       if (isEditing) {
+        if (!originalSerial) {
+          alert("Original serial missing. Reload and try again.");
+          return;
+        }
+
         await axios.put(
-          `https://ieeedu-admincertificate.onrender.com/participants/${form.serialNumber}`,
+          `https://ieeedu-admincertificate.onrender.com/participants/${originalSerial}`,
           {
             ...form,
-            password: password,  // ✅ Send the password in the request body
+            password,
           }
         );
       } else {
@@ -282,15 +287,17 @@ export default function App() {
           form
         );
       }
+
       resetForm();
       fetchData();
     } catch (error) {
-      console.error("Failed to submit form", error);
-      alert("Operation failed. Please check your connection and try again.");
+      console.error(error);
+      alert("Operation failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+
 
 
   const resetForm = () => {
@@ -304,7 +311,9 @@ export default function App() {
       certificateUrl: ""
     });
     setIsEditing(false);
+    setOriginalSerial(null); // ✅ RESET
   };
+
 
   const handleEdit = (participant: Participant) => {
     setPasswordModal({
@@ -326,6 +335,7 @@ export default function App() {
     });
   };
 
+  const [originalSerial, setOriginalSerial] = useState<string | null>(null);
 
   const handlePasswordConfirm = async (password: string) => {
     if (!password.trim()) {
@@ -335,21 +345,25 @@ export default function App() {
 
     if (passwordModal.type === 'edit' && passwordModal.participant) {
       try {
-        const res = await axios.post("https://ieeedu-admincertificate.onrender.com/verify-password", {
-          password: password
-        });
+        const res = await axios.post(
+          "https://ieeedu-admincertificate.onrender.com/verify-password",
+          { password }
+        );
+
         if (res.status === 200) {
           setForm(passwordModal.participant);
+          setOriginalSerial(passwordModal.participant.serialNumber); // 🔒 KEY FIX
           setIsEditing(true);
         } else {
-          alert("Invalid admin password. Access denied.");
+          alert("Invalid admin password");
         }
       } catch {
-        alert("Invalid admin password. Access denied.");
+        alert("Invalid admin password");
       } finally {
         setPasswordModal({ ...passwordModal, isOpen: false });
       }
-    } else if (passwordModal.type === 'delete' && passwordModal.participant) {
+    }
+    else if (passwordModal.type === 'delete' && passwordModal.participant) {
       setIsLoading(true);
       try {
         await axios.delete(
