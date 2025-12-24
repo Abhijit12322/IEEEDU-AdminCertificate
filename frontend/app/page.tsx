@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-
 interface Participant {
   serialNumber: string;
   name: string;
@@ -27,7 +26,7 @@ export default function App() {
     certificateUrl: ""
   });
 
-  const [originalSerial, setOriginalSerial] = useState<string | null>(null); // 🔑 FIX
+  const [originalSerial, setOriginalSerial] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,8 +36,8 @@ export default function App() {
 
   // ================= FETCH =================
   const fetchData = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const res = await axios.get(`${API}/participants`);
       setParticipants(res.data);
       setFilteredParticipants(res.data);
@@ -54,13 +53,18 @@ export default function App() {
   // ================= FILTER =================
   useEffect(() => {
     let data = participants;
-    if (searchTerm)
+
+    if (searchTerm) {
       data = data.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.serialNumber.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    if (filterPosition)
+    }
+
+    if (filterPosition) {
       data = data.filter(p => p.position === filterPosition);
+    }
+
     setFilteredParticipants(data);
   }, [participants, searchTerm, filterPosition]);
 
@@ -79,17 +83,20 @@ export default function App() {
       programPhotoLink: "",
       certificateUrl: ""
     });
-    setOriginalSerial(null); // 🔑 RESET
+    setOriginalSerial(null);
     setIsEditing(false);
   };
 
   // ================= ADD / UPDATE =================
-  const submitForm = async (password?: string) => {
+  const submitForm = async () => {
+    const password = prompt("Enter admin password");
+    if (!password) return;
+
     setIsLoading(true);
     try {
       if (isEditing && originalSerial) {
         await axios.put(
-          `${API}/participants/${originalSerial}`, // 🔑 CORRECT SERIAL
+          `${API}/participants/${originalSerial}`,
           { ...form, password }
         );
       } else {
@@ -110,7 +117,7 @@ export default function App() {
     const res = await axios.post(`${API}/verify-password`, { password });
     if (res.status === 200) {
       setForm(p);
-      setOriginalSerial(p.serialNumber); // 🔑 STORE ORIGINAL
+      setOriginalSerial(p.serialNumber);
       setIsEditing(true);
     } else {
       alert("Invalid password");
@@ -134,6 +141,28 @@ export default function App() {
     <div className="p-10">
       <h1 className="text-3xl font-bold mb-6">IEEE Certificate Admin</h1>
 
+      {/* SEARCH + FILTER */}
+      <div className="flex gap-4 mb-6">
+        <input
+          placeholder="Search by name or serial"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="border p-2 w-64"
+        />
+
+        <input
+          placeholder="Filter by position"
+          value={filterPosition}
+          onChange={e => setFilterPosition(e.target.value)}
+          className="border p-2 w-64"
+        />
+      </div>
+
+      {/* LOADING */}
+      {isLoading && (
+        <p className="text-blue-600 font-semibold mb-4">Loading...</p>
+      )}
+
       {/* FORM */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <input
@@ -141,7 +170,7 @@ export default function App() {
           value={form.serialNumber}
           onChange={handleChange}
           placeholder="Serial"
-          disabled={isEditing} // 🔒 LOCK SERIAL
+          disabled={isEditing}
           className="border p-2"
         />
         <input name="name" value={form.name} onChange={handleChange} placeholder="Name" className="border p-2" />
@@ -153,7 +182,7 @@ export default function App() {
       </div>
 
       <button
-        onClick={() => submitForm(prompt("Enter admin password") || undefined)}
+        onClick={submitForm}
         className="bg-blue-600 text-white px-6 py-2 rounded"
       >
         {isEditing ? "Update" : "Add"}
