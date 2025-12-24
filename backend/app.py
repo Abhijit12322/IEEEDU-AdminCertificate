@@ -93,46 +93,41 @@ def delete_participant(serial_number):
 
 @app.route("/participants/<serial_number>", methods=["PUT"])
 def update_participant(serial_number):
-    req_data = request.json or {}
-    password = req_data.get("password")
+    req = request.json or {}
+    password = req.get("password")
 
-    # 1. Admin authentication
     if password != ADMIN_PASSWORD:
-        return jsonify({"error": "Unauthorized: Invalid admin password."}), 401
-
-    new_serial = req_data["serialNumber"].strip()
+        return jsonify({"error": "Unauthorized"}), 401
 
     records = sheet.get_all_records()
+    headers = sheet.row_values(1)
 
-    # 2. Prevent serial duplication (except for the same record)
-    for row in records:
-        if (
-            row.get("Serial Number") == new_serial
-            and new_serial != serial_number
-        ):
-            return jsonify({
-                "error": "Serial number already exists. It must be unique."
-            }), 409
-
-    # 3. Find and update the correct row
-    for i, row in enumerate(records, start=2):  # start=2 skips header
+    # Find row index
+    row_index = None
+    for i, row in enumerate(records, start=2):
         if row.get("Serial Number") == serial_number:
-            sheet.update(
-                f"A{i}:G{i}",
-                [[
-                    new_serial,
-                    req_data["name"],
-                    req_data["programEvents"],
-                    req_data["issueDate"],
-                    req_data["position"],
-                    req_data["programPhotoLink"],
-                    req_data["certificateUrl"]
-                ]],
-                value_input_option="USER_ENTERED"
-            )
-            return jsonify({"message": "Participant updated successfully."}), 200
+            row_index = i
+            break
 
-    return jsonify({"error": "Participant not found."}), 404
+    if not row_index:
+        return jsonify({"error": "Participant not found"}), 404
+
+    # Map header → value
+    update_data = {
+        "Serial Number": req["serialNumber"],
+        "Name": req["name"],
+        "Program Events": req["programEvents"],
+        "Issue Date": req["issueDate"],
+        "Position": req["position"],
+        "Program Photo Link": req["programPhotoLink"],
+        "Certificate URL": req["certificateUrl"],
+    }
+
+    for col_name, value in update_data.items():
+        col_index = headers.index(col_name) + 1
+        sheet.update_cell(row_index, col_index, value)
+
+    return jsonify({"message": "Participant updated successfully"}), 200
 
 
 @app.route("/check-password")
