@@ -151,6 +151,7 @@ function PasswordModal({ isOpen, onClose, onConfirm, title, message, type }: Pas
 }
 
 export default function App() {
+  const [adminPassword, setAdminPassword] = useState<string | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [filteredParticipants, setFilteredParticipants] = useState<Participant[]>([]);
   const [form, setForm] = useState<Participant>({
@@ -186,8 +187,12 @@ export default function App() {
     setError(null);
     try {
       const res = await axios.get("https://ieeedu-admincertificate.onrender.com/participants");
-      setParticipants(res.data);
-      setFilteredParticipants(res.data);
+      const sorted = [...res.data].sort((a, b) =>
+        a.serialNumber.localeCompare(b.serialNumber)
+      );
+      setParticipants(sorted);
+      setFilteredParticipants(sorted);
+
     } catch (error) {
       console.error("Error fetching participants:", error);
       setError("Failed to connect to the server. Please ensure the backend is running on port 5000.");
@@ -254,12 +259,12 @@ export default function App() {
     if (!isValidForm()) return;
 
     if (isEditing) {
-      setPasswordModal({
-        isOpen: true,
-        type: 'edit',
-        title: 'Confirm Update',
-        message: 'This action will modify participant data. Please verify your administrator credentials to proceed.'
-      });
+      if (!adminPassword) {
+        alert("Admin verification expired. Please re-authenticate.");
+        resetForm();
+        return;
+      }
+      await submitForm(adminPassword); // ✅ PASS PASSWORD
     } else {
       await submitForm();
     }
@@ -269,16 +274,21 @@ export default function App() {
     setIsLoading(true);
     try {
       if (isEditing) {
-        if (!originalSerial) {
-          alert("Original serial missing. Reload and try again.");
+        if (!originalSerial || !password) {
+          alert("Update authorization failed. Please retry.");
           return;
         }
 
         await axios.put(
           `https://ieeedu-admincertificate.onrender.com/participants/${originalSerial}`,
           {
-            ...form,
-            password,
+            name: form.name,
+            programEvents: form.programEvents,
+            issueDate: form.issueDate,
+            position: form.position,
+            programPhotoLink: form.programPhotoLink,
+            certificateUrl: form.certificateUrl,
+            password
           }
         );
       } else {
@@ -300,6 +310,7 @@ export default function App() {
 
 
 
+
   const resetForm = () => {
     setForm({
       serialNumber: "",
@@ -311,8 +322,10 @@ export default function App() {
       certificateUrl: ""
     });
     setIsEditing(false);
-    setOriginalSerial(null); // ✅ RESET
+    setOriginalSerial(null);
+    setAdminPassword(null); // ✅ CLEAR PASSWORD
   };
+
 
 
   const handleEdit = (participant: Participant) => {
@@ -353,6 +366,7 @@ export default function App() {
         if (res.status === 200) {
           setForm(passwordModal.participant);
           setOriginalSerial(passwordModal.participant.serialNumber); // 🔒 KEY FIX
+          setAdminPassword(password); // ✅ STORE PASSWORD
           setIsEditing(true);
         } else {
           alert("Invalid admin password");
@@ -711,13 +725,13 @@ export default function App() {
                     </td>
                   </tr>
                 ) : (
-                  filteredParticipants.map((participant, index) => (
-                    <tr key={index} className="hover:bg-gray-50 transition-colors duration-150">
+                  filteredParticipants.map((participant) => (
+                    <tr key={participant.serialNumber} className="hover:bg-gray-50 transition-colors duration-150">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold text-sm">
-                              {participant.serialNumber.slice(-2)}
+                              {participant.serialNumber.slice(-4)}
                             </span>
                           </div>
                           <span className="text-sm font-mono font-medium text-gray-900">
@@ -729,7 +743,7 @@ export default function App() {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                             <span className="text-gray-600 font-semibold text-sm">
-                              {participant.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                              {participant.name.split(' ').map(n => n[0]).join('').slice(0, 2)}-{participant.serialNumber.slice(-4)}
                             </span>
                           </div>
                           <div>

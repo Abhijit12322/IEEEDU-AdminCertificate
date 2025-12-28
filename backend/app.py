@@ -41,7 +41,7 @@ def get_all_records():
 
 def serial_exists(serial):
     records = get_all_records()
-    return any(r.get("Serial Number") == serial for r in records)
+    return any(r.get("Serial_Number") == serial for r in records)
 
 # ================== GET ==================
 
@@ -159,11 +159,12 @@ def delete_participant(serial_number):
     records = get_all_records()
 
     for i, row in enumerate(records, start=2):
-        if row.get("Serial Number") == serial_number:
+        if row.get("Serial_Number") == serial_number:
             sheet.delete_rows(i)
             return jsonify({"message": "Participant deleted"}), 200
 
     return jsonify({"error": "Participant not found"}), 404
+
 
 # ================== PASSWORD CHECK ==================
 
