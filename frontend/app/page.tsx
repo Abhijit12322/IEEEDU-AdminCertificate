@@ -187,8 +187,12 @@ export default function App() {
     setError(null);
     try {
       const res = await axios.get("https://ieeedu-admincertificate.onrender.com/participants");
-      setParticipants(res.data);
-      setFilteredParticipants(res.data);
+      const sorted = [...res.data].sort((a, b) =>
+        a.serialNumber.localeCompare(b.serialNumber)
+      );
+      setParticipants(sorted);
+      setFilteredParticipants(sorted);
+
     } catch (error) {
       console.error("Error fetching participants:", error);
       setError("Failed to connect to the server. Please ensure the backend is running on port 5000.");
@@ -727,7 +731,7 @@ export default function App() {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold text-sm">
-                              {participant.serialNumber.slice(-2)}
+                              {participant.serialNumber.slice(-4)}
                             </span>
                           </div>
                           <span className="text-sm font-mono font-medium text-gray-900">
@@ -739,7 +743,7 @@ export default function App() {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                             <span className="text-gray-600 font-semibold text-sm">
-                              {participant.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                              {participant.name.split(' ').map(n => n[0]).join('').slice(0, 2)}-{participant.serialNumber.slice(-4)}
                             </span>
                           </div>
                           <div>
