@@ -43,6 +43,14 @@ def serial_exists(serial):
     records = get_all_records()
     return any(r.get("Serial_Number") == serial for r in records)
 
+
+def find_row_by_serial(sheet, serial_number):
+    serial_col = sheet.col_values(1)  # Column A (Serial Number)
+    for idx, value in enumerate(serial_col, start=1):
+        if value == serial_number:
+            return idx
+    return None
+
 # ================== GET ==================
 
 
@@ -92,51 +100,35 @@ def add_participant():
 
 @app.route("/participants/<serial_number>", methods=["PUT"])
 def update_participant(serial_number):
-    req = request.json or {}
-    password = req.get("password")
+    data = request.json or {}
 
-    if password != ADMIN_PASSWORD:
+    # 🔐 Admin password check
+    if data.get("password") != ADMIN_PASSWORD:
         return jsonify({"error": "Unauthorized"}), 401
 
-    # Fetch all records
-    records = get_all_records()
+    # 🔍 Find correct row by Serial Number
+    row_index = find_row_by_serial(sheet, serial_number)
 
-    # Find the row index
-    row_index = None
-    for i, row in enumerate(records, start=2):  # Start at 2 for header
-        if row.get("Serial_Number") == serial_number:
-            row_index = i
-            break
-
-    if row_index is None:
+    if not row_index:
         return jsonify({"error": "Participant not found"}), 404
 
-    new_serial = serial_number  # LOCK SERIAL NUMBER
-
-    # Prepare updated values in order
-    cols = [
-        "Serial_Number",
-        "Name",
-        "Program",
-        "Issue_Date",
-        "Position",
-        "Program_Photo_Link",
-        "Certificate_URL"
+    # ✅ Prepare updated row (SERIAL NUMBER NEVER CHANGES)
+    updated_row = [
+        serial_number,                      # A: Serial_Number (LOCKED)
+        data.get("name", ""),                # B: Name
+        data.get("programEvents", ""),       # C: Program
+        data.get("issueDate", ""),            # D: Issue_Date
+        data.get("position", ""),             # E: Position
+        data.get("programPhotoLink", ""),     # F: Program_Photo_Link
+        data.get("certificateUrl", "")        # G: Certificate_URL
     ]
 
-    values = [
-        new_serial,
-        req.get("name", ""),
-        req.get("programEvents", ""),
-        req.get("issueDate", ""),
-        req.get("position", ""),
-        req.get("programPhotoLink", ""),
-        req.get("certificateUrl", "")
-    ]
-
-    # Update row in Google Sheet
-    sheet.update(f"A{row_index}:G{row_index}", [
-                 values], value_input_option="USER_ENTERED")
+    # 🟢 Update EXACT row — NO shifting, NO overwrite
+    sheet.update(
+        f"A{row_index}:G{row_index}",
+        [updated_row],
+        value_input_option="USER_ENTERED"
+    )
 
     return jsonify({"message": "Participant updated successfully"}), 200
 
