@@ -722,7 +722,7 @@ export default function App() {
                   </tr>
                 ) : (
                   filteredParticipants.map((participant, index) => (
-                    <tr key={index} className="hover:bg-gray-50 transition-colors duration-150">
+                    <tr key={participant.serialNumber} className="hover:bg-gray-50 transition-colors duration-150">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
