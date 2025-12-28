@@ -151,6 +151,7 @@ function PasswordModal({ isOpen, onClose, onConfirm, title, message, type }: Pas
 }
 
 export default function App() {
+  const [adminPassword, setAdminPassword] = useState<string | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [filteredParticipants, setFilteredParticipants] = useState<Participant[]>([]);
   const [form, setForm] = useState<Participant>({
@@ -254,12 +255,12 @@ export default function App() {
     if (!isValidForm()) return;
 
     if (isEditing) {
-      setPasswordModal({
-        isOpen: true,
-        type: 'edit',
-        title: 'Confirm Update',
-        message: 'This action will modify participant data. Please verify your administrator credentials to proceed.'
-      });
+      if (!adminPassword) {
+        alert("Admin verification expired. Please re-authenticate.");
+        resetForm();
+        return;
+      }
+      await submitForm(adminPassword); // ✅ PASS PASSWORD
     } else {
       await submitForm();
     }
@@ -269,16 +270,21 @@ export default function App() {
     setIsLoading(true);
     try {
       if (isEditing) {
-        if (!originalSerial) {
-          alert("Original serial missing. Reload and try again.");
+        if (!originalSerial || !password) {
+          alert("Update authorization failed. Please retry.");
           return;
         }
 
         await axios.put(
           `https://ieeedu-admincertificate.onrender.com/participants/${originalSerial}`,
           {
-            ...form,
-            password,
+            name: form.name,
+            programEvents: form.programEvents,
+            issueDate: form.issueDate,
+            position: form.position,
+            programPhotoLink: form.programPhotoLink,
+            certificateUrl: form.certificateUrl,
+            password
           }
         );
       } else {
@@ -300,6 +306,7 @@ export default function App() {
 
 
 
+
   const resetForm = () => {
     setForm({
       serialNumber: "",
@@ -311,8 +318,10 @@ export default function App() {
       certificateUrl: ""
     });
     setIsEditing(false);
-    setOriginalSerial(null); // ✅ RESET
+    setOriginalSerial(null);
+    setAdminPassword(null); // ✅ CLEAR PASSWORD
   };
+
 
 
   const handleEdit = (participant: Participant) => {
@@ -353,6 +362,7 @@ export default function App() {
         if (res.status === 200) {
           setForm(passwordModal.participant);
           setOriginalSerial(passwordModal.participant.serialNumber); // 🔒 KEY FIX
+          setAdminPassword(password); // ✅ STORE PASSWORD
           setIsEditing(true);
         } else {
           alert("Invalid admin password");
