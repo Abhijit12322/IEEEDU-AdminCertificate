@@ -111,12 +111,7 @@ def update_participant(serial_number):
     if row_index is None:
         return jsonify({"error": "Participant not found"}), 404
 
-    new_serial = req.get("serialNumber", serial_number)
-
-    # 🔒 SERIAL UNIQUENESS CHECK
-    for row in records:
-        if row.get("Serial_Number") == new_serial and new_serial != serial_number:
-            return jsonify({"error": "Serial number already exists"}), 409
+    new_serial = serial_number  # LOCK SERIAL NUMBER
 
     # Prepare updated values in order
     cols = [
