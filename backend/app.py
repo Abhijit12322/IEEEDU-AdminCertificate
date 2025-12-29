@@ -35,40 +35,40 @@ sheet = client.open_by_key(SHEET_ID).worksheet("Sheet1 web")
 # ================== HELPERS ==================
 
 
-def get_all_records():
-    return sheet.get_all_records()
+def serial_exists(serial_number: str) -> bool:
+    serials = sheet.col_values(1)  # Column A
+    return serial_number in serials
 
 
-def serial_exists(serial):
-    records = get_all_records()
-    return any(r.get("Serial_Number") == serial for r in records)
-
-
-def find_row_by_serial(sheet, serial_number):
-    serial_col = sheet.col_values(1)  # Column A (Serial Number)
-    for idx, value in enumerate(serial_col, start=1):
-        if value == serial_number:
-            return idx
-    return None
+def get_row_index_by_serial(serial_number: str):
+    serials = sheet.col_values(1)
+    if serial_number not in serials:
+        return None
+    return serials.index(serial_number) + 1  # 1-based index
 
 # ================== GET ==================
 
 
 @app.route("/participants", methods=["GET"])
 def get_participants():
-    records = get_all_records()
-    return jsonify([
-        {
-            "serialNumber": r.get("Serial_Number", ""),
-            "name": r.get("Name", ""),
-            "programEvents": r.get("Program", ""),
-            "issueDate": r.get("Issue_Date", ""),
-            "position": r.get("Position", ""),
-            "programPhotoLink": r.get("Program_Photo_Link", ""),
-            "certificateUrl": r.get("Certificate_URL", "")
-        }
-        for r in records
-    ])
+    rows = sheet.get_all_values()[1:]  # Skip header
+
+    result = []
+    for r in rows:
+        if not any(r):  # Skip fully empty rows
+            continue
+
+        result.append({
+            "serialNumber": r[0] if len(r) > 0 else "",
+            "name": r[1] if len(r) > 1 else "",
+            "programEvents": r[2] if len(r) > 2 else "",
+            "issueDate": r[3] if len(r) > 3 else "",
+            "position": r[4] if len(r) > 4 else "",
+            "programPhotoLink": r[5] if len(r) > 5 else "",
+            "certificateUrl": r[6] if len(r) > 6 else "",
+        })
+
+    return jsonify(result), 200
 
 # ================== ADD ==================
 
@@ -77,22 +77,24 @@ def get_participants():
 def add_participant():
     data = request.json or {}
 
-    if serial_exists(data["serialNumber"]):
-        return jsonify({
-            "error": "Serial number already exists"
-        }), 409
+    serial_number = data.get("serialNumber")
+    if not serial_number:
+        return jsonify({"error": "Serial number required"}), 400
 
-    row = [
-        data["serialNumber"],
-        data["name"],
-        data["programEvents"],
-        data["issueDate"],
-        data["position"],
-        data["programPhotoLink"],
-        data["certificateUrl"]
+    if serial_exists(serial_number):
+        return jsonify({"error": "Serial number already exists"}), 409
+
+    new_row = [
+        serial_number,
+        data.get("name", ""),
+        data.get("programEvents", ""),
+        data.get("issueDate", ""),
+        data.get("position", ""),
+        data.get("programPhotoLink", ""),
+        data.get("certificateUrl", "")
     ]
 
-    sheet.append_row(row, value_input_option="USER_ENTERED")
+    sheet.append_row(new_row, value_input_option="USER_ENTERED")
     return jsonify({"message": "Participant added successfully"}), 201
 
 # ================== UPDATE ==================
@@ -105,31 +107,23 @@ def update_participant(serial_number):
     if data.get("password") != ADMIN_PASSWORD:
         return jsonify({"error": "Unauthorized"}), 401
 
-    # 🔍 Read Serial Numbers directly from column A
-    serial_column = sheet.col_values(1)  # Column A
-
-    if serial_number not in serial_column:
+    row_index = get_row_index_by_serial(serial_number)
+    if row_index is None:
         return jsonify({"error": "Participant not found"}), 404
 
-    # ✅ Exact row index (1-based, includes header)
-    row_index = serial_column.index(serial_number) + 1
-
-    # 🔒 SERIAL NUMBER NEVER CHANGES
     updated_row = [
-        serial_number,                         # A: Serial Number (LOCKED)
-        data.get("name", ""),                  # B: Name
-        data.get("programEvents", ""),         # C: Program
-        data.get("issueDate", ""),             # D: Issue Date
-        data.get("position", ""),              # E: Position
-        data.get("programPhotoLink", ""),      # F: Program Photo Link
-        data.get("certificateUrl", "")         # G: Certificate URL
+        serial_number,                     # 🔒 LOCKED
+        data.get("name", ""),
+        data.get("programEvents", ""),
+        data.get("issueDate", ""),
+        data.get("position", ""),
+        data.get("programPhotoLink", ""),
+        data.get("certificateUrl", "")
     ]
 
-    # 🧠 Update EXACT row — no shifting, no overwrite
-    last_used_row = len(sheet.get_all_values())
-
-    if row_index > last_used_row:
-        # Insert row so Sheets recognizes it
+    # Ensure row physically exists
+    last_row = len(sheet.get_all_values())
+    if row_index > last_row:
         sheet.insert_row([""] * 7, row_index)
 
     sheet.update(
@@ -140,27 +134,22 @@ def update_participant(serial_number):
 
     return jsonify({"message": "Participant updated successfully"}), 200
 
-
 # ================== DELETE ==================
 
 
 @app.route("/participants/<serial_number>", methods=["DELETE"])
 def delete_participant(serial_number):
-    req = request.json or {}
-    password = req.get("password")
+    data = request.json or {}
 
-    if password != ADMIN_PASSWORD:
+    if data.get("password") != ADMIN_PASSWORD:
         return jsonify({"error": "Unauthorized"}), 401
 
-    records = get_all_records()
+    row_index = get_row_index_by_serial(serial_number)
+    if row_index is None:
+        return jsonify({"error": "Participant not found"}), 404
 
-    for i, row in enumerate(records, start=2):
-        if row.get("Serial_Number") == serial_number:
-            sheet.delete_rows(i)
-            return jsonify({"message": "Participant deleted"}), 200
-
-    return jsonify({"error": "Participant not found"}), 404
-
+    sheet.delete_rows(row_index)
+    return jsonify({"message": "Participant deleted"}), 200
 
 # ================== PASSWORD CHECK ==================
 
@@ -172,8 +161,9 @@ def verify_password():
         return jsonify({"status": "ok"}), 200
     return jsonify({"status": "unauthorized"}), 401
 
-
 # ================== RUN ==================
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
