@@ -102,28 +102,36 @@ def add_participant():
 def update_participant(serial_number):
     data = request.json or {}
 
-    # 🔐 Admin password check
     if data.get("password") != ADMIN_PASSWORD:
         return jsonify({"error": "Unauthorized"}), 401
 
-    # 🔍 Find correct row by Serial Number
-    row_index = find_row_by_serial(sheet, serial_number)
+    # 🔍 Read Serial Numbers directly from column A
+    serial_column = sheet.col_values(1)  # Column A
 
-    if not row_index:
+    if serial_number not in serial_column:
         return jsonify({"error": "Participant not found"}), 404
 
-    # ✅ Prepare updated row (SERIAL NUMBER NEVER CHANGES)
+    # ✅ Exact row index (1-based, includes header)
+    row_index = serial_column.index(serial_number) + 1
+
+    # 🔒 SERIAL NUMBER NEVER CHANGES
     updated_row = [
-        serial_number,                      # A: Serial_Number (LOCKED)
-        data.get("name", ""),                # B: Name
-        data.get("programEvents", ""),       # C: Program
-        data.get("issueDate", ""),            # D: Issue_Date
-        data.get("position", ""),             # E: Position
-        data.get("programPhotoLink", ""),     # F: Program_Photo_Link
-        data.get("certificateUrl", "")        # G: Certificate_URL
+        serial_number,                         # A: Serial Number (LOCKED)
+        data.get("name", ""),                  # B: Name
+        data.get("programEvents", ""),         # C: Program
+        data.get("issueDate", ""),             # D: Issue Date
+        data.get("position", ""),              # E: Position
+        data.get("programPhotoLink", ""),      # F: Program Photo Link
+        data.get("certificateUrl", "")         # G: Certificate URL
     ]
 
-    # 🟢 Update EXACT row — NO shifting, NO overwrite
+    # 🧠 Update EXACT row — no shifting, no overwrite
+    last_used_row = len(sheet.get_all_values())
+
+    if row_index > last_used_row:
+        # Insert row so Sheets recognizes it
+        sheet.insert_row([""] * 7, row_index)
+
     sheet.update(
         f"A{row_index}:G{row_index}",
         [updated_row],
@@ -131,6 +139,7 @@ def update_participant(serial_number):
     )
 
     return jsonify({"message": "Participant updated successfully"}), 200
+
 
 # ================== DELETE ==================
 
