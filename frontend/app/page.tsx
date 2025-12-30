@@ -20,23 +20,15 @@ import {
   XCircle,
   RefreshCw,
   Shield,
+  ArrowRight,
   Eye,
-  EyeOff,
-  ChevronRight,
-  WifiOff
+  EyeOff
 } from "lucide-react";
 
 // --- Constants ---
+// Replace this URL with your specific logo URL if needed
 const IEEE_LOGO_URL = "/4.png";
 
-// High quality tech backgrounds
-const BACKGROUND_IMAGES = [
-  "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop", // Blue Chip/Circuit
-  "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2070&auto=format&fit=crop", // Cyber Security/Matrix Code
-  "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop", // Futuristic Tech Lab
-  "https://images.unsplash.com/photo-1558494949-ef526b0042a0?q=80&w=2070&auto=format&fit=crop", // Server Room
-  "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop"  // Global Network
-];
 
 // --- Interfaces ---
 interface Participant {
@@ -76,7 +68,7 @@ function PasswordModal({ isOpen, onClose, onConfirm, title, message, type }: Pas
       return;
     }
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate validation delay
     onConfirm(password);
     setPassword("");
     setError("");
@@ -92,7 +84,7 @@ function PasswordModal({ isOpen, onClose, onConfirm, title, message, type }: Pas
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-100">
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div className="flex items-center gap-3">
@@ -131,7 +123,7 @@ function PasswordModal({ isOpen, onClose, onConfirm, title, message, type }: Pas
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white outline-none"
+              className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
               placeholder="Enter your admin password"
               autoFocus
             />
@@ -173,31 +165,22 @@ function PasswordModal({ isOpen, onClose, onConfirm, title, message, type }: Pas
   );
 }
 
-// --- LOGIN COMPONENT WITH ERROR CODES ---
+// --- LOGIN COMPONENT WITH LOGO ---
 function Login({ onLoginSuccess }: LoginProps) {
   const [password, setPassword] = useState("");
-  // Error state is now an object to hold message and code separately
-  const [error, setError] = useState<{ msg: string; code: string } | null>(null);
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [currentBgIndex, setCurrentBgIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentBgIndex((prev) => (prev + 1) % BACKGROUND_IMAGES.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) {
-      setError({ msg: "Please enter the password", code: "EMPTY_FIELD" });
+      setError("Please enter the administrator password.");
       return;
     }
 
     setIsLoading(true);
-    setError(null);
+    setError("");
 
     try {
       const res = await axios.post(
@@ -208,173 +191,96 @@ function Login({ onLoginSuccess }: LoginProps) {
       if (res.status === 200) {
         onLoginSuccess();
       } else {
-        setError({ msg: "Authentication refused", code: `HTTP ${res.status}` });
+        setError("Invalid password. Please try again.");
       }
     } catch (err) {
-      // FIX: Removed ': any' type annotation here
       console.error(err);
-
-      let errorMsg = "An unexpected error occurred";
-      let errorCode = "UNKNOWN_ERR";
-
-      if (axios.isAxiosError(err)) {
-        if (err.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
-          errorCode = `HTTP ${err.response.status}`;
-          if (err.response.status === 401 || err.response.status === 403) {
-            errorMsg = "Incorrect Password";
-          } else if (err.response.status === 404) {
-            errorMsg = "Verification Endpoint Not Found";
-          } else if (err.response.status >= 500) {
-            errorMsg = "Server Internal Error";
-          } else {
-            errorMsg = "Request Declined";
-          }
-        } else if (err.request) {
-          // The request was made but no response was received
-          errorCode = "ERR_CONNECTION_REFUSED";
-          errorMsg = "Server Unreachable. Check Internet.";
-        } else {
-          // Something happened in setting up the request
-          errorCode = "ERR_CLIENT_SETUP";
-          errorMsg = err.message;
-        }
-      } else if (err instanceof Error) {
-        errorMsg = err.message;
-      }
-
-      setError({ msg: errorMsg, code: errorCode });
+      setError("Invalid password or server connection failed.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-center relative overflow-hidden">
+          {/* Decorative background elements */}
+          <div className="absolute top-0 left-0 w-full h-full bg-white/5 pointer-events-none"></div>
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl pointer-events-none"></div>
 
-      <style>{`
-        @keyframes slowZoom {
-          0% { transform: scale(1); }
-          100% { transform: scale(1.1); }
-        }
-        .bg-slide {
-          animation: slowZoom 6s ease-in-out infinite alternate;
-        }
-      `}</style>
-
-      {/* Backgrounds */}
-      <div className="fixed inset-0 z-0 bg-black">
-        {BACKGROUND_IMAGES.map((img, index) => (
-          <div
-            key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentBgIndex ? "opacity-100" : "opacity-0"
-              }`}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={img}
-              alt={`Background ${index}`}
-              className="w-full h-full object-cover bg-slide"
-            />
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
-          </div>
-        ))}
-      </div>
-
-      <div className="w-full max-w-[420px] bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-500">
-
-        <div className="pt-10 pb-6 px-8 text-center">
-          <div className="w-24 h-24 bg-white rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg transform transition-transform hover:scale-105 duration-300">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/* Logo Section */}
+          <div className="bg-white p-3 w-40 h-15 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg relative z-10">
             <img
               src={IEEE_LOGO_URL}
               alt="IEEE Logo"
-              className="w-16 h-16 object-contain"
+              className="w-full h-full object-contain"
             />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight mb-2 drop-shadow-md">Welcome Back</h1>
-          <p className="text-blue-100/90 text-sm font-medium">IEEE Dibrugarh University Admin Portal</p>
+
+          <h1 className="text-2xl font-bold text-white mb-2 relative z-10">Admin Portal</h1>
+          <p className="text-blue-100 text-sm relative z-10">IEEE Dibrugarh University Students Branch</p>
         </div>
 
-        <div className="px-8 pb-10">
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-white/80 uppercase tracking-wider ml-1">
-                Security Access Key
-              </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-white/50 group-focus-within:text-white transition-colors" />
-                </div>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-12 py-4 bg-black/20 border border-white/10 rounded-xl text-white placeholder-white/30 focus:bg-black/30 focus:border-white/30 focus:ring-2 focus:ring-white/20 transition-all outline-none"
-                  placeholder="Enter your password..."
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-white/50 hover:text-white transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
+        <form onSubmit={handleLogin} className="p-8">
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Access Password
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Lock className="h-5 w-5 text-gray-400" />
               </div>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-11 pr-12 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 focus:bg-white transition-all outline-none"
+                placeholder="Enter admin password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
             </div>
-
-            {/* Error Message Display Area */}
             {error && (
-              <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-xl flex items-start gap-3 text-red-100 backdrop-blur-md animate-in slide-in-from-top-2">
-                <div className="mt-0.5 p-1 bg-red-500/20 rounded-full">
-                  {error.code.includes("CONNECTION") ? (
-                    <WifiOff className="w-4 h-4 text-red-200" />
-                  ) : (
-                    <AlertCircle className="w-4 h-4 text-red-200" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-white">{error.msg}</p>
-                  <p className="text-[10px] font-mono text-red-200 mt-0.5 opacity-80 uppercase tracking-wide">
-                    Code: {error.code}
-                  </p>
-                </div>
+              <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 text-sm text-red-600 animate-pulse">
+                <AlertCircle className="w-4 h-4" />
+                {error}
               </div>
             )}
+          </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-white text-blue-900 font-bold py-4 rounded-xl hover:bg-blue-50 focus:ring-4 focus:ring-white/30 transition-all shadow-lg shadow-black/20 flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <RefreshCw className="w-5 h-5 animate-spin text-blue-600" />
-              ) : (
-                <>
-                  Access Dashboard
-                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
-          </form>
-        </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 disabled:opacity-70"
+          >
+            {isLoading ? (
+              <RefreshCw className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                Login to Dashboard
+                <ArrowRight className="w-5 h-5" />
+              </>
+            )}
+          </button>
+        </form>
 
-        <div className="py-4 bg-black/20 text-center border-t border-white/10">
-          <p className="text-[11px] text-white/40 font-medium tracking-wide uppercase">
-            Restricted Area • Authorized Personnel Only
+        <div className="bg-gray-50 p-4 text-center border-t border-gray-100">
+          <p className="text-xs text-gray-500">
+            Authorized personnel only. All activities are monitored.
           </p>
         </div>
-      </div>
-
-      <div className="absolute bottom-6 left-0 right-0 text-center z-10">
-        <p className="text-white/30 text-xs">© 2025 IEEE Dibrugarh University Student Branch</p>
       </div>
     </div>
   );
 }
 
-// --- DASHBOARD COMPONENT ---
+// --- DASHBOARD COMPONENT WITH LOGO ---
 function Dashboard() {
   const [adminPassword, setAdminPassword] = useState<string | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -639,9 +545,8 @@ function Dashboard() {
         <div className="mb-8 mt-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              {/* Logo container */}
+              {/* Logo container instead of the previous colored box */}
               <div className="p-2 bg-white rounded-2xl shadow-md border border-blue-50 flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={IEEE_LOGO_URL}
                   alt="IEEE Logo"
@@ -1080,4 +985,4 @@ export default function App() {
   }
 
   return <Dashboard />;
-}
+} 
