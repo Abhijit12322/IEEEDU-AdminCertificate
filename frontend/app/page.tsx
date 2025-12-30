@@ -20,22 +20,22 @@ import {
   XCircle,
   RefreshCw,
   Shield,
-  ArrowRight,
   Eye,
   EyeOff,
-  ChevronRight
+  ChevronRight,
+  WifiOff
 } from "lucide-react";
 
 // --- Constants ---
 const IEEE_LOGO_URL = "/4.png";
 
-// Add as many background images as you want here
+// High quality tech backgrounds
 const BACKGROUND_IMAGES = [
-  "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop", // Blue Circuit Chip (Classic Tech)
-  "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop", // Global Network (Connectivity)
-  "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop", // Futuristic Lab (Innovation)
-  "https://images.unsplash.com/photo-1558494949-ef526b0042a0?q=80&w=2070&auto=format&fit=crop", // Server Room (Data/Admin)
-  "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2070&auto=format&fit=crop"  // Cyber Security Matrix (Security)
+  "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop", // Blue Chip/Circuit
+  "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2070&auto=format&fit=crop", // Cyber Security/Matrix Code
+  "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop", // Futuristic Tech Lab
+  "https://images.unsplash.com/photo-1558494949-ef526b0042a0?q=80&w=2070&auto=format&fit=crop", // Server Room
+  "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop"  // Global Network
 ];
 
 // --- Interfaces ---
@@ -76,7 +76,7 @@ function PasswordModal({ isOpen, onClose, onConfirm, title, message, type }: Pas
       return;
     }
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate validation delay
+    await new Promise(resolve => setTimeout(resolve, 500));
     onConfirm(password);
     setPassword("");
     setError("");
@@ -173,31 +173,31 @@ function PasswordModal({ isOpen, onClose, onConfirm, title, message, type }: Pas
   );
 }
 
-// --- NEW BEAUTIFUL LOGIN COMPONENT ---
+// --- LOGIN COMPONENT WITH ERROR CODES ---
 function Login({ onLoginSuccess }: LoginProps) {
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  // Error state is now an object to hold message and code separately
+  const [error, setError] = useState<{ msg: string; code: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
 
-  // Rotate Background Images
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentBgIndex((prev) => (prev + 1) % BACKGROUND_IMAGES.length);
-    }, 5000); // Change every 5 seconds
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) {
-      setError("Please enter the administrator password.");
+      setError({ msg: "Please enter the password", code: "EMPTY_FIELD" });
       return;
     }
 
     setIsLoading(true);
-    setError("");
+    setError(null);
 
     try {
       const res = await axios.post(
@@ -208,11 +208,42 @@ function Login({ onLoginSuccess }: LoginProps) {
       if (res.status === 200) {
         onLoginSuccess();
       } else {
-        setError("Invalid password. Please try again.");
+        setError({ msg: "Authentication refused", code: `HTTP ${res.status}` });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("Invalid password or server connection failed.");
+
+      let errorMsg = "An unexpected error occurred";
+      let errorCode = "UNKNOWN_ERR";
+
+      if (axios.isAxiosError(err)) {
+        if (err.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          errorCode = `HTTP ${err.response.status}`;
+          if (err.response.status === 401 || err.response.status === 403) {
+            errorMsg = "Incorrect Password";
+          } else if (err.response.status === 404) {
+            errorMsg = "Verification Endpoint Not Found";
+          } else if (err.response.status >= 500) {
+            errorMsg = "Server Internal Error";
+          } else {
+            errorMsg = "Request Declined";
+          }
+        } else if (err.request) {
+          // The request was made but no response was received
+          errorCode = "ERR_CONNECTION_REFUSED";
+          errorMsg = "Server Unreachable. Check Internet.";
+        } else {
+          // Something happened in setting up the request
+          errorCode = "ERR_CLIENT_SETUP";
+          errorMsg = err.message;
+        }
+      } else if (err instanceof Error) {
+        errorMsg = err.message;
+      }
+
+      setError({ msg: errorMsg, code: errorCode });
     } finally {
       setIsLoading(false);
     }
@@ -221,7 +252,6 @@ function Login({ onLoginSuccess }: LoginProps) {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
 
-      {/* Animation Styles */}
       <style>{`
         @keyframes slowZoom {
           0% { transform: scale(1); }
@@ -232,7 +262,7 @@ function Login({ onLoginSuccess }: LoginProps) {
         }
       `}</style>
 
-      {/* Multiple Backgrounds with Crossfade */}
+      {/* Backgrounds */}
       <div className="fixed inset-0 z-0 bg-black">
         {BACKGROUND_IMAGES.map((img, index) => (
           <div
@@ -240,6 +270,7 @@ function Login({ onLoginSuccess }: LoginProps) {
             className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentBgIndex ? "opacity-100" : "opacity-0"
               }`}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={img}
               alt={`Background ${index}`}
@@ -250,23 +281,21 @@ function Login({ onLoginSuccess }: LoginProps) {
         ))}
       </div>
 
-      {/* Glassmorphism Login Card */}
       <div className="w-full max-w-[420px] bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-500">
 
-        {/* Card Header */}
         <div className="pt-10 pb-6 px-8 text-center">
-          <div className="w-35 h-15 bg-white rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg transform transition-transform hover:scale-105 duration-300">
+          <div className="w-24 h-24 bg-white rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg transform transition-transform hover:scale-105 duration-300">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={IEEE_LOGO_URL}
               alt="IEEE Logo"
-              className="w-full h-full object-contain"
+              className="w-16 h-16 object-contain"
             />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight mb-2 drop-shadow-md">Welcome Back</h1>
-          <p className="text-blue-100/90 text-sm font-medium">IEEE Dibrugarh University Admin Certificate Portal</p>
+          <p className="text-blue-100/90 text-sm font-medium">IEEE Dibrugarh University Admin Portal</p>
         </div>
 
-        {/* Login Form */}
         <div className="px-8 pb-10">
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
@@ -294,10 +323,22 @@ function Login({ onLoginSuccess }: LoginProps) {
               </div>
             </div>
 
+            {/* Error Message Display Area */}
             {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-200 text-sm backdrop-blur-sm animate-in slide-in-from-top-2">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                {error}
+              <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-xl flex items-start gap-3 text-red-100 backdrop-blur-md animate-in slide-in-from-top-2">
+                <div className="mt-0.5 p-1 bg-red-500/20 rounded-full">
+                  {error.code.includes("CONNECTION") ? (
+                    <WifiOff className="w-4 h-4 text-red-200" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-red-200" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-white">{error.msg}</p>
+                  <p className="text-[10px] font-mono text-red-200 mt-0.5 opacity-80 uppercase tracking-wide">
+                    Code: {error.code}
+                  </p>
+                </div>
               </div>
             )}
 
@@ -318,7 +359,6 @@ function Login({ onLoginSuccess }: LoginProps) {
           </form>
         </div>
 
-        {/* Card Footer */}
         <div className="py-4 bg-black/20 text-center border-t border-white/10">
           <p className="text-[11px] text-white/40 font-medium tracking-wide uppercase">
             Restricted Area • Authorized Personnel Only
@@ -326,7 +366,6 @@ function Login({ onLoginSuccess }: LoginProps) {
         </div>
       </div>
 
-      {/* Footer Branding */}
       <div className="absolute bottom-6 left-0 right-0 text-center z-10">
         <p className="text-white/30 text-xs">© 2025 IEEE Dibrugarh University Student Branch</p>
       </div>
@@ -601,6 +640,7 @@ function Dashboard() {
             <div className="flex items-center gap-4">
               {/* Logo container */}
               <div className="p-2 bg-white rounded-2xl shadow-md border border-blue-50 flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={IEEE_LOGO_URL}
                   alt="IEEE Logo"
