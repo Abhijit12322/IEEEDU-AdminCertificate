@@ -19,9 +19,26 @@ import {
   CheckCircle,
   XCircle,
   RefreshCw,
-  Shield
+  Shield,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  ChevronRight
 } from "lucide-react";
 
+// --- Constants ---
+const IEEE_LOGO_URL = "/4.png";
+
+// Add as many background images as you want here
+const BACKGROUND_IMAGES = [
+  "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop", // Blue Circuit Chip (Classic Tech)
+  "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop", // Global Network (Connectivity)
+  "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop", // Futuristic Lab (Innovation)
+  "https://images.unsplash.com/photo-1558494949-ef526b0042a0?q=80&w=2070&auto=format&fit=crop", // Server Room (Data/Admin)
+  "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2070&auto=format&fit=crop"  // Cyber Security Matrix (Security)
+];
+
+// --- Interfaces ---
 interface Participant {
   serialNumber: string;
   name: string;
@@ -40,6 +57,12 @@ interface PasswordModalProps {
   message: string;
   type: 'edit' | 'delete';
 }
+
+interface LoginProps {
+  onLoginSuccess: () => void;
+}
+
+// --- Components ---
 
 function PasswordModal({ isOpen, onClose, onConfirm, title, message, type }: PasswordModalProps) {
   const [password, setPassword] = useState("");
@@ -69,7 +92,7 @@ function PasswordModal({ isOpen, onClose, onConfirm, title, message, type }: Pas
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-100">
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div className="flex items-center gap-3">
@@ -108,7 +131,7 @@ function PasswordModal({ isOpen, onClose, onConfirm, title, message, type }: Pas
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+              className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white outline-none"
               placeholder="Enter your admin password"
               autoFocus
             />
@@ -150,7 +173,169 @@ function PasswordModal({ isOpen, onClose, onConfirm, title, message, type }: Pas
   );
 }
 
-export default function App() {
+// --- NEW BEAUTIFUL LOGIN COMPONENT ---
+function Login({ onLoginSuccess }: LoginProps) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [currentBgIndex, setCurrentBgIndex] = useState(0);
+
+  // Rotate Background Images
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentBgIndex((prev) => (prev + 1) % BACKGROUND_IMAGES.length);
+    }, 5000); // Change every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!password) {
+      setError("Please enter the administrator password.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const res = await axios.post(
+        "https://ieeedu-admincertificate.onrender.com/verify-password",
+        { password }
+      );
+
+      if (res.status === 200) {
+        onLoginSuccess();
+      } else {
+        setError("Invalid password. Please try again.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Invalid password or server connection failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+
+      {/* Animation Styles */}
+      <style>{`
+        @keyframes slowZoom {
+          0% { transform: scale(1); }
+          100% { transform: scale(1.1); }
+        }
+        .bg-slide {
+          animation: slowZoom 6s ease-in-out infinite alternate;
+        }
+      `}</style>
+
+      {/* Multiple Backgrounds with Crossfade */}
+      <div className="fixed inset-0 z-0 bg-black">
+        {BACKGROUND_IMAGES.map((img, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentBgIndex ? "opacity-100" : "opacity-0"
+              }`}
+          >
+            <img
+              src={img}
+              alt={`Background ${index}`}
+              className="w-full h-full object-cover bg-slide"
+            />
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
+          </div>
+        ))}
+      </div>
+
+      {/* Glassmorphism Login Card */}
+      <div className="w-full max-w-[420px] bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-500">
+
+        {/* Card Header */}
+        <div className="pt-10 pb-6 px-8 text-center">
+          <div className="w-35 h-15 bg-white rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg transform transition-transform hover:scale-105 duration-300">
+            <img
+              src={IEEE_LOGO_URL}
+              alt="IEEE Logo"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <h1 className="text-3xl font-bold text-white tracking-tight mb-2 drop-shadow-md">Welcome Back</h1>
+          <p className="text-blue-100/90 text-sm font-medium">IEEE Dibrugarh University Admin Certificate Portal</p>
+        </div>
+
+        {/* Login Form */}
+        <div className="px-8 pb-10">
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-white/80 uppercase tracking-wider ml-1">
+                Security Access Key
+              </label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-white/50 group-focus-within:text-white transition-colors" />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-11 pr-12 py-4 bg-black/20 border border-white/10 rounded-xl text-white placeholder-white/30 focus:bg-black/30 focus:border-white/30 focus:ring-2 focus:ring-white/20 transition-all outline-none"
+                  placeholder="Enter your password..."
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-white/50 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-200 text-sm backdrop-blur-sm animate-in slide-in-from-top-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-white text-blue-900 font-bold py-4 rounded-xl hover:bg-blue-50 focus:ring-4 focus:ring-white/30 transition-all shadow-lg shadow-black/20 flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <RefreshCw className="w-5 h-5 animate-spin text-blue-600" />
+              ) : (
+                <>
+                  Access Dashboard
+                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* Card Footer */}
+        <div className="py-4 bg-black/20 text-center border-t border-white/10">
+          <p className="text-[11px] text-white/40 font-medium tracking-wide uppercase">
+            Restricted Area • Authorized Personnel Only
+          </p>
+        </div>
+      </div>
+
+      {/* Footer Branding */}
+      <div className="absolute bottom-6 left-0 right-0 text-center z-10">
+        <p className="text-white/30 text-xs">© 2025 IEEE Dibrugarh University Student Branch</p>
+      </div>
+    </div>
+  );
+}
+
+// --- DASHBOARD COMPONENT ---
+function Dashboard() {
   const [adminPassword, setAdminPassword] = useState<string | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [filteredParticipants, setFilteredParticipants] = useState<Participant[]>([]);
@@ -410,16 +595,21 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="max-w-7xl mx-auto p-6 ">
-        {/* Enhanced Header */}
+        {/* Enhanced Header with Logo */}
         <div className="mb-8 mt-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg">
-                <Users className="w-9 h-9 text-white" />
+              {/* Logo container */}
+              <div className="p-2 bg-white rounded-2xl shadow-md border border-blue-50 flex items-center justify-center">
+                <img
+                  src={IEEE_LOGO_URL}
+                  alt="IEEE Logo"
+                  className="w-12 h-12 object-contain"
+                />
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                  IEEE Cerficate Admin Dashboard
+                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                  IEEE Certificate Admin Dashboard
                 </h1>
                 <p className="text-gray-600 mt-1">IEEE Dibrugarh University Students Branch</p>
               </div>
@@ -434,7 +624,7 @@ export default function App() {
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </button>
-              <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-xl">
+              <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-xl">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-sm text-green-700 font-medium">Live</span>
               </div>
@@ -838,4 +1028,15 @@ export default function App() {
       />
     </div>
   );
+}
+
+// --- MAIN APP COMPONENT ---
+export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
+
+  return <Dashboard />;
 }
