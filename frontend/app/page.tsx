@@ -218,7 +218,7 @@ function Login({ onLoginSuccess }: LoginProps) {
             />
           </div>
 
-          <h1 className="text-2xl font-bold text-white mb-2 relative z-10">Admin Portal</h1>
+          <h1 className="text-2xl font-bold text-white mb-2 relative z-10">Admin Certificate Portal</h1>
           <p className="text-blue-100 text-sm relative z-10">IEEE Dibrugarh University Students Branch</p>
         </div>
 
