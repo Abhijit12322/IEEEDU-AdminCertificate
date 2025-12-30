@@ -210,7 +210,8 @@ function Login({ onLoginSuccess }: LoginProps) {
       } else {
         setError({ msg: "Authentication refused", code: `HTTP ${res.status}` });
       }
-    } catch (err: any) {
+    } catch (err) {
+      // FIX: Removed ': any' type annotation here
       console.error(err);
 
       let errorMsg = "An unexpected error occurred";
